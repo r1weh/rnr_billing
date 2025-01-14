@@ -45,7 +45,7 @@ function FormatMataUang(amount)
 end
 
 
-RNRFunctions.RegisterServerCallback('klrp_billing:checkBilling:callback', function(source, cb, xTarget)
+RNRFunctions.RegisterServerCallback('rnr_billing:checkBilling:callback', function(source, cb, xTarget)
 	local xTarget = RNRFunctions.GetPlayerFromId(xTarget)
 	MySQL.Async.fetchAll('SELECT * FROM billing WHERE identifier = @identifier', {
 		['@identifier'] = xTarget.identifier
@@ -54,7 +54,7 @@ RNRFunctions.RegisterServerCallback('klrp_billing:checkBilling:callback', functi
 	end)
 end)
 
-lib.callback.register('klrp-billing:server:getData', function(source, target)
+lib.callback.register('rnr-billing:server:getData', function(source, target)
     local xTarget
 	if target then
 		xTarget = RNRFunctions.GetPlayerFromId(target)
@@ -70,7 +70,7 @@ lib.callback.register('klrp-billing:server:getData', function(source, target)
     return dataTarget
 end)
 
-RNRFunctions.RegisterServerCallback('klrp_billing:callback', function(source, cb, xTarget)
+RNRFunctions.RegisterServerCallback('rnr_billing:callback', function(source, cb, xTarget)
 	local xTarget = RNRFunctions.GetPlayerFromId(xTarget)
 	local dataTarget = {
 		name = xTarget.name,
@@ -81,8 +81,8 @@ RNRFunctions.RegisterServerCallback('klrp_billing:callback', function(source, cb
 end)
 
 
-RegisterServerEvent('ym-billing:tagihkembali')
-AddEventHandler('ym-billing:tagihkembali', function(idenTarget, jmlTagihan)
+RegisterServerEvent('rnr-billing:tagihkembali')
+AddEventHandler('rnr-billing:tagihkembali', function(idenTarget, jmlTagihan)
 	local xTarget = RNRFunctions.GetPlayerFromIdentifier(idenTarget)
 	local xPlayer = RNRFunctions.GetPlayerFromId(source)
 	
@@ -91,25 +91,30 @@ AddEventHandler('ym-billing:tagihkembali', function(idenTarget, jmlTagihan)
 	end
 
 end)
-RegisterServerEvent('klrp_billing:TambahBilling')
-AddEventHandler('klrp_billing:TambahBilling', function(target, jumlah)
+RegisterServerEvent('rnr_billing:TambahBilling')
+AddEventHandler('rnr_billing:TambahBilling', function(target, jumlah)
 	local source = source
 	local xTarget = RNRFunctions.GetPlayerFromId(target)
 	local xPlayer = RNRFunctions.GetPlayerFromId(source)
 
 	if xPlayer.job.name == 'ambulance' then
 		JobName = "EMS"
+		print('Core Added job : ', JobName)
 	elseif xPlayer.job.name == 'police' then
 		JobName = "POLISI"
+		print('Core Added job : ', JobName)
 	elseif xPlayer.job.name == 'pedagang' then
 		JobName = "PEDAGANG"
+		print('Core Added job : ', JobName)
 	elseif xPlayer.job.name == 'mechanic' then
 		JobName = "MEKANIK"
+		print('Core Added job : ', JobName)
 	elseif xPlayer.job.name == 'state' then
 		JobName = "STATE"
+		print('Core Added job : ', JobName)
 	end
 	
-	MySQL.Async.execute('INSERT INTO billing (identifier, sender, target_type, target, label, amount) VALUES (@identifier, @sender, @target_type, @target, @label, @amount)', {
+	MySQL.Async.execute('INSERT INTO rnr_billing (identifier, sender, target_type, target, label, amount) VALUES (@identifier, @sender, @target_type, @target, @label, @amount)', {
 		['@identifier'] = xTarget.identifier,
 		['@sender'] = xPlayer.identifier,
 		['@target_type'] = 'society',
@@ -121,8 +126,8 @@ AddEventHandler('klrp_billing:TambahBilling', function(target, jumlah)
 	end)
 end)
 
-RegisterServerEvent('ym-billing:discordWebhook')
-AddEventHandler('ym-billing:discordWebhook', function(penagih, penerima, jumlah, targetSociety)
+RegisterServerEvent('rnr-billing:discordWebhook')
+AddEventHandler('rnr-billing:discordWebhook', function(penagih, penerima, jumlah, targetSociety)
 	local xPlayer = RNRFunctions.GetPlayerFromIdentifier(penerima)
 	MySQL.Async.fetchAll('SELECT * FROM users WHERE identifier = @identifier', {
 		['@identifier'] = penagih
@@ -143,7 +148,7 @@ AddEventHandler('esx_billing:sendBill', function(target, sharedAccountName, labe
 		if xPlayer.job.name == society.name then
 			TriggerEvent('esx_addonaccount:getSharedAccount', sharedAccountName, function(account)
 				if account then
-					MySQL.Async.execute('INSERT INTO billing (identifier, sender, target_type, target, label, amount) VALUES (@identifier, @sender, @target_type, @target, @label, @amount)', {
+					MySQL.Async.execute('INSERT INTO rnr_billing (identifier, sender, target_type, target, label, amount) VALUES (@identifier, @sender, @target_type, @target, @label, @amount)', {
 						['@identifier'] = xTarget.identifier,
 						['@sender'] = xPlayer.identifier,
 						['@target_type'] = 'society',
@@ -154,7 +159,7 @@ AddEventHandler('esx_billing:sendBill', function(target, sharedAccountName, labe
 						xTarget.showNotification('Anda Baru Saja Menerima INVOICE')
 					end)
 				else
-					MySQL.Async.execute('INSERT INTO billing (identifier, sender, target_type, target, label, amount) VALUES (@identifier, @sender, @target_type, @target, @label, @amount)', {
+					MySQL.Async.execute('INSERT INTO rnr_billing (identifier, sender, target_type, target, label, amount) VALUES (@identifier, @sender, @target_type, @target, @label, @amount)', {
 						['@identifier'] = xTarget.identifier,
 						['@sender'] = xPlayer.identifier,
 						['@target_type'] = 'player',
@@ -224,7 +229,7 @@ RNRFunctions.RegisterServerCallback('esx_billing:payBill', function(source, cb, 
 			if result[1].target_type == 'player' then
 				if xTarget then
 					if xPlayer.getMoney() >= amount then
-						MySQL.Async.execute('DELETE FROM billing WHERE id = @id', {
+						MySQL.Async.execute('DELETE FROM rnr_billing WHERE id = @id', {
 							['@id'] = billId
 						}, function(rowsChanged)
 							if rowsChanged == 1 then
@@ -236,7 +241,7 @@ RNRFunctions.RegisterServerCallback('esx_billing:payBill', function(source, cb, 
 							cb()
 						end)
 					else
-						MySQL.Async.execute('DELETE FROM billing WHERE id = @id', {
+						MySQL.Async.execute('DELETE FROM rnr_billing WHERE id = @id', {
 							['@id'] = billId
 						}, function(rowsChanged)
 							if rowsChanged == 1 then
@@ -254,7 +259,7 @@ RNRFunctions.RegisterServerCallback('esx_billing:payBill', function(source, cb, 
 			else
 				TriggerEvent('esx_addonaccount:getSharedAccount', result[1].target, function(account)
 					if xPlayer.getMoney() >= amount then
-						MySQL.Async.execute('DELETE FROM billing WHERE id = @id', {
+						MySQL.Async.execute('DELETE FROM rnr_billing WHERE id = @id', {
 							['@id'] = billId
 						}, function(rowsChanged)
 							if rowsChanged == 1 then
@@ -268,7 +273,7 @@ RNRFunctions.RegisterServerCallback('esx_billing:payBill', function(source, cb, 
 							cb()
 						end)
 					else
-						MySQL.Async.execute('DELETE FROM billing WHERE id = @id', {
+						MySQL.Async.execute('DELETE FROM rnr_billing WHERE id = @id', {
 							['@id'] = billId
 						}, function(rowsChanged)
 							if rowsChanged == 1 then
@@ -292,26 +297,26 @@ end)
 
 function KirimDCBang(penagih, penerima, jumlah, targetSociety)
 	if targetSociety == "society_ambulance" then
-		LinkSent = "https://discord.com/api/webhooks/1194068817182195784/YNCwWcW9tphLSI66iTUufwqhEoPkl0adlOexY6ZWOR4-FeDWp_HM9o22sz-sLzVfZ9nu"
-		Instansi = 'EMS'
+		LinkSent = Config.webhooks['Ambulance'].Logs
+		Instansi = Config.webhooks['Ambulance'].Label
 	elseif targetSociety == "society_police" then
-		LinkSent = "https://discord.com/api/webhooks/1194068817182195784/YNCwWcW9tphLSI66iTUufwqhEoPkl0adlOexY6ZWOR4-FeDWp_HM9o22sz-sLzVfZ9nu"
-		Instansi = 'POLISI'
+		LinkSent = Config.webhooks['Police'].Logs
+		Instansi = Config.webhooks['Police'].Label
 	elseif targetSociety == "society_mechanic" then
-		LinkSent = "https://discord.com/api/webhooks/1194068817182195784/YNCwWcW9tphLSI66iTUufwqhEoPkl0adlOexY6ZWOR4-FeDWp_HM9o22sz-sLzVfZ9nu"
-		Instansi = 'MEKANIK'
+		LinkSent = Config.webhooks['Mechanic'].Logs
+		Instansi = Config.webhooks['Mechanic'].Label
 	elseif targetSociety == "society_pedagang" then
-		LinkSent = "https://discord.com/api/webhooks/1194068817182195784/YNCwWcW9tphLSI66iTUufwqhEoPkl0adlOexY6ZWOR4-FeDWp_HM9o22sz-sLzVfZ9nu"
-		Instansi = 'PEDAGANG'
+		LinkSent = Config.webhooks['Pedagang'].Logs
+		Instansi = Config.webhooks['Pedgang'].Label
 	elseif targetSociety == "society_state" then
-		LinkSent = "https://discord.com/api/webhooks/1194068817182195784/YNCwWcW9tphLSI66iTUufwqhEoPkl0adlOexY6ZWOR4-FeDWp_HM9o22sz-sLzVfZ9nu"
-		Instansi = 'STATE'
+		LinkSent = Config.webhooks['State'].Logs
+		Instansi = Config.webhooks['State'].Label
 	end
 
     local connect = {
         {
             ["color"] = 16711680,
-            ["title"] = "**YUME INVOICE**",
+            ["title"] = "**RNR INVOICE**",
             ["description"] = "Nama Penagih : "..penagih.."\nNama Penerima : "..penerima.."\nInstansi : "..Instansi.."\nJumlah : "..jumlah,
             ["footer"] = {
                 ["text"] = os.date("%d-%B-%Y  (%H:%M:%S)"),

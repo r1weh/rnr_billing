@@ -48,21 +48,26 @@ function FormatMataUang(amount)
     end
 end
 
-AddEventHandler('esx:onPlayerDeath', function() isDead = true end)
-AddEventHandler('esx:onPlayerSpawn', function(spawn) isDead = false end)
+if Config.Framework == 'esx' then
+	AddEventHandler('esx:onPlayerDeath', function() isDead = true if Config.Debug then print("Player died. isDead set to:", isDead) end end)
+	AddEventHandler('esx:onPlayerSpawn', function(spawn) isDead = false if Config.Debug then print("Player Spawn. isDead set to:", isDead) end  end)
+elseif Config.Framework == 'qb' then
+	AddEventHandler('QBCore:onPlayerDeath', function() isDead = true if Config.Debug then print("Player died. isDead set to:", isDead) end  end)
+	AddEventHandler('QBCore:onPlayerSpawn', function(spawn) isDead = false if Config.Debug then print("Player Spawn. isDead set to:", isDead) end  end)
+end
 
 RegisterCommand('pay', function()
-	TriggerEvent('klrp_billing:add')
+	TriggerEvent('rnr_billing:add')
 end, false)
 
 RegisterCommand('billing', function()
-	TriggerEvent('klrp_billing:add')
+	TriggerEvent('rnr_billing:add')
 end, false)
 
-RegisterNetEvent('klrp_billing:add')
-AddEventHandler('klrp_billing:add', function()
+RegisterNetEvent('rnr_billing:add')
+AddEventHandler('rnr_billing:add', function()
 	lib.registerContext({
-		id = 'klrp_billing',
+		id = 'rnr_billing',
 		title = 'BILLING',
 		options = {
 			{
@@ -76,7 +81,7 @@ AddEventHandler('klrp_billing:add', function()
 				title = 'Tambah Tagihan',
 				icon = "fas fa-plus",
 				onSelect = function()
-					TriggerEvent('klrp_billing:add2')
+					TriggerEvent('rnr_billing:add2')
 				end,
 			},
 			{
@@ -84,14 +89,14 @@ AddEventHandler('klrp_billing:add', function()
 				icon = "fas fa-file-invoice-dollar",
 				description = 'Untuk Memeriksa Tagihan Orang Yang Ada Disekitar',
 				onSelect = function()
-					TriggerEvent('klrp_billing:check')
+					TriggerEvent('rnr_billing:check')
 				end,
 			},
 		}
 	})
 
 	lib.registerContext({
-		id = 'klrp_billing2',
+		id = 'rnr_billing2',
 		title = 'Billing',
 		options = {
 			{
@@ -104,20 +109,20 @@ AddEventHandler('klrp_billing:add', function()
 		}
 	})
 
-	local dataTarget = lib.callback.await('klrp-billing:server:getData', false, false)
+	local dataTarget = lib.callback.await('rnr-billing:server:getData', false, false)
 	if dataTarget.job_name == 'ambulance' or dataTarget.job_name == 'taxi' or dataTarget.job_name == 'police' or dataTarget.job_name == 'pedagang' or dataTarget.job_name == 'mechanic' then
-		lib.showContext('klrp_billing')
+		lib.showContext('rnr_billing')
 	else
-		lib.showContext('klrp_billing2')
+		lib.showContext('rnr_billing2')
 	end
 end)
 
 
-AddEventHandler('klrp_billing:check', function()
+AddEventHandler('rnr_billing:check', function()
 	local elementsTagihan = {}
 	local closestPlayerServerId = CariPlayerTerdekat()
 	if closestPlayerServerId ~= -1 then
-		RNRFunctions.TriggerServerCallback('klrp_billing:checkBilling:callback', function(resultCheck)
+		RNRFunctions.TriggerServerCallback('rnr_billing:checkBilling:callback', function(resultCheck)
 			local tagihanHitung = 0
 			for no=1, #resultCheck do 
 				if string.gsub(resultCheck[no].target, 'society_', "") == RNRFunctions.GetPlayerData().job.name then
@@ -134,18 +139,18 @@ AddEventHandler('klrp_billing:check', function()
 							title = 'TAGIHAN '..resultCheck[no].label..' SEBESAR '..FormatMataUang(resultCheck[no].amount),
 							description = 'Memiliki Tagihan Ke '..resultCheck[no].label..' Bayar Sekarang Juga',
 							onSelect = function()
-								TriggerServerEvent('ym-billing:tagihkembali', resultCheck[no].identifier, resultCheck[no].amount)
+								TriggerServerEvent('rnr-billing:tagihkembali', resultCheck[no].identifier, resultCheck[no].amount)
 							end,
 						})
 					end
 				end
 				lib.registerContext({
-					id = 'klrp_billingcheck',
+					id = 'rnr_billingcheck',
 					title = 'BILLING CHECK',
 					options = elementsTagihan
 				})
 				Citizen.Wait(500)
-				lib.showContext('klrp_billingcheck')
+				lib.showContext('rnr_billingcheck')
 			end
 		end, closestPlayerServerId)
 	else
@@ -153,11 +158,11 @@ AddEventHandler('klrp_billing:check', function()
 	end
 end)
 
-AddEventHandler('klrp_billing:add2', function()
+AddEventHandler('rnr_billing:add2', function()
 	local closestPlayerServerId = CariPlayerTerdekat()
 	if Config.Debug then print('Debbug : '..json.encode(closestPlayerServerId)) end
 	if closestPlayerServerId ~= -1 then
-		RNRFunctions.TriggerServerCallback('klrp_billing:callback', function(result)
+		RNRFunctions.TriggerServerCallback('rnr_billing:callback', function(result)
 			local alert = lib.alertDialog({
 				header = 'PERIKSA KEMBALI',
 				content = 'Nama Lengkap : '..result.name,
@@ -171,7 +176,7 @@ AddEventHandler('klrp_billing:add2', function()
 				  })
 				  
 				  if input[1] ~= '' and input[1] > 0 then 
-					TriggerServerEvent("klrp_billing:TambahBilling", closestPlayerServerId, input[1])
+					TriggerServerEvent("rnr_billing:TambahBilling", closestPlayerServerId, input[1])
 				  else
 					TriggerEvent('mythic_notify:client:SendAlert', { type = 'inform', text = 'Kolom Tidak Boleh Kosong/Lebih Kecil Dari 0'})
 				  end
